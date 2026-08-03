@@ -57,7 +57,7 @@ Two independent API stacks coexist:
 - Paths in `core/routes/route_const.dart` (splash + search are wired; `onBoarding`/`login`/`homeScreen` are stale unused constants — remove when touched), screen imports in `core/routes/part_of.dart`, GoRoutes in `route_config.dart` (`part of part_of.dart`). Boot: splash → `context.go(RouteConst.search)` after 800ms.
 - Bottom nav (future) uses `StatefulShellRoute.indexedStack` and needs `GlobalObjectKey` per branch. Use `context.go()` for bottom-nav, `context.push()` for stack navigation.
 
-## Take-home task status (5 sequential parts, one at a time, splash first)
+## Take-home task status (5 sequential parts, one at a time, splash first, then UI before API)
 
 ### Part 1 — Foundation & boot (splash + routing) ✅ DONE
 - [x] `pubspec.yaml`: add `pretty_dio_logger: ^1.3.1`; run `flutter pub get`.
@@ -71,22 +71,23 @@ Two independent API stacks coexist:
 - [x] Delete stale `test/widget_test.dart`.
 - [x] Verify: `pub get` → `flutter analyze` → app boots to splash → navigates to search shell.
 
-### Part 2 — Data layer (SSE + repository) ⏳ NEXT
-- [ ] Models (`@JsonSerializable`): `Location`, `SearchItem`, `MetaEvent`; plain `SseFrame`. Run build_runner codegen.
+### Part 2 — UI (the screen) ⏳ NEXT (design first, mock data, no network)
+- [ ] Define UI-rendering models: `Location`, `SearchItem` (`@JsonSerializable`, needed by the autocomplete field + result card). Run build_runner codegen.
+- [ ] `view/widgets/`: location autocomplete field, filter row (date range → `YYYY-MM-DD`, guest stepper, price `RangeSlider` → `min-max`), `SearchResultCard` (`CachedNetworkImage` + placeholder/fallback, title, address, price + struck `offer_price`, reviews, hotel/featured chips), results list.
+- [ ] `PropertySearchScreen` renders every state (loading / streaming / done banner / empty / error+retry) with live "N stays" header, backed by **mock streaming data** (canned items with delays, no network).
+- [ ] Verify: `dart format .` → `flutter analyze`.
+
+### Part 3 — Data layer (SSE + repository) — the API calls
+- [ ] `MetaEvent` model + plain `SseFrame`. Run build_runner codegen.
 - [ ] `core/service/network/sse_parser.dart`: pure `Stream<List<int>>` → `Stream<SseFrame>` (event/data frames, blank-line separators, `\r\n`).
 - [ ] Abstract `PropertySearchRepository` (domain) + dio impl (data): `searchDioProvider` (searchBase, no TokenManager, PrettyDioLogger, `receiveTimeout` disabled, per-search `CancelToken`); autocomplete `GET /popular-locations?q=`; SSE `GET /search/stream` via `ResponseType.stream`.
 - [ ] Domain repository provider.
 - [ ] Verify: codegen → `flutter analyze`.
 
-### Part 3 — ViewModels (state)
-- [ ] `PropertySearchState` (idle/loading/streaming/done/error + items/totalCount/errorMessage) + `PropertySearchViewModel` (`StateNotifier`, `StateNotifierProvider.autoDispose`, `ref.onDispose` cancel, new search cancels previous via CancelToken + subscription, retry).
+### Part 4 — ViewModels (state)
+- [ ] `PropertySearchState` (idle/loading/streaming/done/error + items/totalCount/errorMessage) + `PropertySearchViewModel` (`StateNotifier`, `StateNotifierProvider.autoDispose`, `ref.onDispose` cancel, new search cancels previous via CancelToken + subscription, retry). Swap the Part 2 mock data source for the real repository.
 - [ ] `LocationSearchViewModel`: 350ms debounce, suggestions, selected `Location`.
 - [ ] Verify: `flutter analyze`.
-
-### Part 4 — UI (the screen)
-- [ ] `view/widgets/`: location autocomplete field, filter row (date range → `YYYY-MM-DD`, guest stepper, price `RangeSlider` → `min-max`), `SearchResultCard` (`CachedNetworkImage` + placeholder/fallback, title, address, price + struck `offer_price`, reviews, hotel/featured chips), results list.
-- [ ] Wire all states into `PropertySearchScreen`: loading / streaming / done banner / empty / error+retry, live "N stays" header. ScreenUtil + theme extensions.
-- [ ] Verify: `dart format .` → `flutter analyze`.
 
 ### Part 5 — Tests & final verification
 - [ ] `test/unit/sse_parser_test.dart` (documented parser-testing approach).
