@@ -1,0 +1,20 @@
+part of 'part_of.dart';
+
+final routerProvider = Provider<GoRouter>((ref) {
+  final navigatorKey = ref.watch(navigatorKeyProvider);
+
+  return GoRouter(
+    navigatorKey: navigatorKey,
+    initialLocation: RouteConst.splash,
+    routes: <RouteBase>[
+      GoRoute(
+        path: RouteConst.splash,
+        pageBuilder: (context, state) => buildTransitionPage(
+          child: const Scaffold(),
+          key: state.pageKey,
+          type: AppTransitionType.fade,
+        ),
+      ),
+    ],
+  );
+});

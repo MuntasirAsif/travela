@@ -1,0 +1,865 @@
+====================================
+PROJECT RULES - FLUTTER CLEAN ARCHITECTURE
+====================================
+This document is reusable across Flutter projects with a lib/ folder structure.
+
+
+1. ARCHITECTURE OVERVIEW
+========================
+
+This Flutter app follows Clean Architecture with feature-based organization:
+
+  lib/
+  ├── main.dart                      # Entry point (ProviderScope + runApp)
+  ├── core/                          # Shared infrastructure (NOT feature-specific)
+  │   ├── const/                     # Static constants (images, strings, enums)
+  │   ├── gen/                       # Generated code (flutter_gen, l10n)
+  │   │   ├── assets.gen.dart        # Type-safe asset references
+  │   │   └── l10n/                  # Localization files
+  │   ├── providers/                 # Global Riverpod providers (navigator key, etc.)
+  │   ├── routes/                    # go_router configuration
+  │   │   ├── route_const.dart       # Route path constants
+  │   │   ├── route_config.dart      # GoRoute definitions
+  │   │   ├── part_of.dart           # Barrel file for routes
+  │   │   └── custom_transition_page.dart  # Page transition animations
+  │   ├── service/                   # Services layer
+  │   │   ├── cache/                 # Local storage (SharedPreferences)
+  │   │   │   ├── cache_service.dart         # Abstract + CacheKey enum
+  │   │   │   └── shared_preference_service.dart  # Implementation
+  │   │   └── network/               # API communication
+  │   │       ├── api_handler.dart       # Api.call() wrapper
+  │   │       ├── dio_client.dart        # Dio setup + interceptors
+  │   │       ├── endpoints.dart         # Base URL + endpoint constants
+  │   │       ├── rest_client.dart        # Retrofit interface
+  │   │       ├── rest_client.g.dart      # Generated Retrofit impl
+  │   │       └── interceptor/
+  │   │           └── token_manager.dart  # Auto token refresh
+  │   └── static/                    # Static utilities
+  │       ├── extensions/            # Dart/Flutter extensions
+  │       ├── theme/                 # Theme system
+  │       │   ├── theme.dart         # Theme export
+  │       │   └── src/
+  │       │       ├── theme_data.dart          # ThemeData definition
+  │       │       ├── theme_extensions/        # Custom theme extensions
+  │       │       │   └── src/
+  │       │       │       ├── colors/          # Color extensions
+  │       │       │       ├── dimensions.dart  # Spacing/padding/radius
+  │       │       │       └── text_style.dart  # Typography
+  │       │       └── part/                    # Theme component parts
+  │       └── utils/                 # Helper utilities
+  │           └── image_picker_helper.dart
+  └── src/
+      ├── feature/                   # Feature modules (domain-driven)
+      │   └── <feature_name>/
+      │       ├── data/              # Data layer (concrete implementations)
+      │       │   ├── model/         # JSON models (@JsonSerializable)
+      │       │   └── repository/    # Repository implementations
+      │       ├── domain/            # Domain layer (abstractions)
+      │       │   ├── repository/    # Abstract repository interfaces
+      │       │   └── provider/      # Riverpod providers for repositories
+      │       └── presentation/      # Presentation layer (UI)
+      │           ├── view_model/    # StateNotifier + providers
+      │           └── view/          # Screen widgets
+      └── widgets/                   # Shared reusable widgets
+          ├── app_text_field.dart         # Text input with debounce + shake
+          ├── app_dropdown.dart           # Generic dropdown with validation
+          ├── custom_loading_indicator.dart  # SpinKit three-bounce loader
+          ├── custom_toast.dart           # Success/error/info/warning toasts
+          ├── custom_network_image.dart   # Cached network image
+          ├── custom_dotted_border.dart   # Custom painted dotted border
+          ├── empty_state_widget.dart     # Animated empty state
+          ├── multi_select_dropdown.dart  # Multi-select checkbox dropdown
+          ├── background_wrapper.dart     # Gradient/solid backgrounds
+          ├── circle_percent_indicator_widget.dart  # Circular progress
+          └── refresh_indicator/
+              └── my_refresh_indicator.dart  # Custom pull-to-refresh
+
+
+2. FEATURE STRUCTURE (data/domain/presentation)
+===============================================
+
+Each feature follows this exact pattern:
+
+  feature_name/
+  ├── data/
+  │   ├── model/
+  │   │   ├── <model_name>.dart          # @JsonSerializable class
+  │   │   └── <model_name>.g.dart        # Generated (don't edit)
+  │   └── repository/
+  │       └── <feature>_repository_impl.dart  # Concrete implementation
+  ├── domain/
+  │   ├── repository/
+  │   │   └── <feature>_repository.dart  # Abstract interface
+  │   └── provider/
+  │       └── <feature>_repository_provider.dart  # Provider instance
+  └── presentation/
+      ├── view_model/
+      │   ├── <feature>_view_model.dart  # StateNotifier logic
+      │   └── <feature>_provider.dart    # StateProvider (if needed)
+      └── view/
+          ├── <feature>_screen.dart      # Main screen widget
+          └── widgets/                   # Feature-specific sub-widgets
+              └── <component>.dart
+
+KEY RULE: Dependencies flow inward only:
+  view → view_model → repository (interface) ← repository (impl) ← service
+
+  Views NEVER import from data/ directly. Always go through domain/.
+
+
+3. API CALL FLOW (with network)
+===============================
+
+Step-by-step for a feature that calls an API:
+
+  1) Define endpoint in core/service/network/endpoints.dart
+     - Add static const String for the endpoint path
+     - Example: static const String login = '/auth/login';
+
+  2) Add Retrofit method in core/service/network/rest_client.dart
+     - Add @POST/@GET/@PUT/@DELETE annotation
+     - Return Future<HttpResponse<dynamic>>
+     - Example:
+       @POST('/auth/login')
+       Future<HttpResponse<dynamic>> login(@Body() Map<String, dynamic> request);
+
+  3) Run codegen:
+     dart run build_runner build --delete-conflicting-outputs
+
+  4) Create model in feature/data/model/ with @JsonSerializable
+     - Annotate class: @JsonSerializable()
+     - Add factory constructor: factory MyClass.fromJson(Map<String, dynamic> json)
+     - Add method: Map<String, dynamic> toJson()
+     - Run codegen to generate .g.dart
+
+  5) Create abstract interface in feature/domain/repository/
+     - Method signature: Future<HttpResponse<dynamic>> methodName(Map<String, dynamic> request)
+     - Or for typed responses: Future<HttpResponse<ModelClass>> methodName(...)
+
+  6) Create implementation in feature/data/repository/
+     - Takes RestClient as constructor param
+     - Delegates to _restClient.methodName(request)
+     - Example:
+       class AuthRepositoryImpl implements AuthRepository {
+         final RestClient _restClient;
+         AuthRepositoryImpl(this._restClient);
+
+         @override
+         Future<HttpResponse<dynamic>> login(Map<String, dynamic> request) {
+           return _restClient.login(request);
+         }
+       }
+
+  7) Create provider in feature/domain/provider/
+     - Provider<AbstractRepository> that creates Impl(RestClient(dio))
+     - Uses dioProvider from core/service/network/dio_client.dart
+     - Example:
+       final authRepositoryProvider = Provider<AuthRepository>((ref) {
+         final dio = ref.watch(dioProvider);
+         return AuthRepositoryImpl(RestClient(dio));
+       });
+
+  8) Create ViewModel in feature/presentation/view_model/
+     - Extends StateNotifier<AsyncValue<void>>
+     - Takes repository + cacheService as constructor params
+     - Uses Api.call() wrapper from core/service/network/api_handler.dart
+     - On success: extract and save data to cache if needed
+     - Example:
+       class LoginViewModel extends StateNotifier<AsyncValue<void>> {
+         final AuthRepository _authRepository;
+         final CacheService _cacheService;
+
+         LoginViewModel(this._authRepository, this._cacheService)
+             : super(const AsyncValue.data(null));
+
+         Future<void> login(LoginModel model) async {
+           state = const AsyncValue.loading();
+           state = await AsyncValue.guard(() async {
+             final response = await Api.call(
+               action: _authRepository.login(model.toJson()),
+             );
+             // Extract and save tokens
+             final data = response.data;
+             await _cacheService.save(CacheKey.accessToken, data['access_token']);
+           });
+         }
+       }
+
+  9) Create Screen in feature/presentation/view/
+     - ConsumerStatefulWidget or ConsumerWidget
+     - Calls view model methods, watches state with ref.watch()
+     - Shows loading/error/data states via state.when()
+     - Example:
+       class LoginScreen extends ConsumerWidget {
+         @override
+         Widget build(BuildContext context, WidgetRef ref) {
+           final state = ref.watch(loginViewModelProvider);
+
+           return Scaffold(
+             body: state.when(
+               loading: () => const CircularProgressIndicator(),
+               error: (e, st) => Text('Error: $e'),
+               data: (_) => LoginForm(),
+             ),
+           );
+         }
+       }
+
+EXAMPLE (Authentication):
+
+  Screen (login_form.dart)
+    → ref.read(loginViewModelProvider.notifier).login(LoginModel(...))
+      → ViewModel calls Api.call(action: _authRepository.login(model.toJson()))
+        → Api handler checks 200/201 status
+          → Repository delegates to _restClient.login(request)
+            → RestClient sends Dio POST to /auth/login
+              → TokenManager interceptor injects Bearer token
+                → HTTP request sent
+    ← Response flows back up
+    ← ViewModel saves tokens to CacheService
+    ← Screen shows toast success/error
+
+
+4. NON-API FLOW (cache/local only)
+===================================
+
+For features that only use local cache (no network):
+
+  1) CacheKey already defined in core/service/cache/cache_service.dart
+     (add new key here if needed)
+
+  2) Create abstract interface in feature/domain/repository/
+     - Methods return/accept primitive types, not HttpResponse
+     - Example:
+       abstract class OnboardingRepository {
+         Future<bool> getOnboardingStatus();
+         Future<void> completeOnboarding();
+       }
+
+  3) Create implementation in feature/data/repository/
+     - Takes CacheService as constructor param
+     - Reads/writes via _cacheService.get<T>(CacheKey.xxx) / .save()
+     - Example:
+       class OnboardingRepositoryImpl implements OnboardingRepository {
+         final CacheService _cacheService;
+         OnboardingRepositoryImpl(this._cacheService);
+
+         @override
+         Future<bool> getOnboardingStatus() async {
+           return _cacheService.get<bool>(CacheKey.isOnBoardingCompleted) ?? false;
+         }
+
+         @override
+         Future<void> completeOnboarding() async {
+           await _cacheService.save(CacheKey.isOnBoardingCompleted, true);
+         }
+       }
+
+  4) Create provider in feature/domain/provider/
+     - Provider<Repository> that creates Impl(cacheService)
+     - Uses cacheServiceProvider from core/service/cache/cache_service.dart
+
+  5) Create ViewModel in feature/presentation/view_model/
+     - Same pattern as API flow but calls repository directly
+     - No Api.call() wrapper needed
+
+  6) Create Screen in feature/presentation/view/
+
+EXAMPLE (Onboarding):
+
+  Screen (onboarding_screen.dart)
+    → ref.read(onboardingViewModelProvider.notifier).completeOnboarding()
+      → ViewModel calls _onboardingRepository.completeOnboarding()
+        → Repository calls _cacheService.save(CacheKey.isOnBoardingCompleted, true)
+    ← Cache updated
+    ← Screen navigates to /login
+
+
+5. THEME SYSTEM
+===============
+
+Access theme anywhere via BuildContext extensions:
+
+  COLORS (core/static/theme/src/theme_extensions/src/colors/):
+    context.color.primary              # Brand color
+    context.color.secondary            # Brand accent
+    context.color.onPrimary            # Text on primary
+    context.color.scaffoldBackground    # Page background
+    context.color.disabled             # Muted elements
+    context.color.text.primary         # Main text
+    context.color.text.secondary       # Subtitle text
+    context.color.success/error/warning/info  # Status colors
+    context.color.appBar.*             # AppBar colors
+    context.color.bottomNavBar.*       # Bottom nav colors
+    context.color.accent.*             # Accent colors
+    context.color.pageView.*           # Page view colors
+
+  TEXT STYLES (core/static/theme/src/theme_extensions/src/text_style.dart):
+    context.textStyle.headingLarge     # 24px/600 weight
+    context.textStyle.headingMedium    # 20px/600 weight
+    context.textStyle.bodyLarge        # 16px/400 weight
+    context.textStyle.bodyMedium       # 14px/400 weight
+    context.textStyle.bodySmall        # 12px/400 weight
+    context.textStyle.labelLarge       # 16px/500 weight, letter spacing 1
+    context.textStyle.labelMedium      # 14px/500 weight
+    context.textStyle.labelSmall       # 12px/500 weight
+
+  DIMENSIONS (core/static/theme/src/theme_extensions/src/dimensions.dart):
+    context.spacing.s1 to context.spacing.s210  # Vertical spacing
+    context.padding.p4 to context.padding.p24   # Padding values
+    context.margin.m1 to context.margin.m24     # Margin values
+    context.radius.r4 to context.radius.r32     # Border radius
+
+  THEME DATA:
+    context.lightTheme                 # Full ThemeData for light mode
+    context.darkTheme                  # Full ThemeData for dark mode
+
+  RESPONSIVE:
+    context.isTablet                   # width > 600px
+    context.screenWidth                # Current screen width
+    context.screenHeight               # Current screen height
+
+IMPORTANT: When adding new theme extensions:
+  1) Create extension class in theme_extensions/src/
+  2) Register in core/static/theme/src/theme_data.dart → extensions: [...]
+  3) Add accessor getter in extensions.dart
+
+
+6. ROUTING
+==========
+
+Route paths defined in: core/routes/route_const.dart
+Route config in: core/routes/route_config.dart
+
+To add a new route:
+  1) Add path constant to RouteConst class:
+     static const String myFeature = '/my-feature';
+
+  2) Import the screen in core/routes/part_of.dart:
+     export '../src/feature/my_feature/presentation/view/my_screen.dart';
+
+  3) Add GoRoute in route_config.dart:
+     GoRoute(
+       path: RouteConst.myFeature,
+       builder: (context, state) => const MyScreen(),
+     ),
+
+  4) For transitions, use buildTransitionPage() helper
+
+Navigation methods (from anywhere with BuildContext):
+  context.go(path)                    # Replace entire stack
+  context.push(path)                  # Push onto stack
+  context.pushReplacement(path)       # Replace current screen
+  context.pop()                       # Go back
+  context.goNamed('routeName')        # Navigate by route name
+  context.pushNamed('routeName')      # Push by route name
+
+For bottom nav: use StatefulShellRoute.indexedStack branches
+  - Requires GlobalObjectKey for each branch
+  - Preserves state across tabs
+
+Deep linking:
+  - go_router handles URLs automatically
+  - Define route paths to match URL patterns
+  - Test:flutter run -d chrome --web-port=8080
+
+
+7. CODE GENERATION
+==================
+
+Run after modifying these files:
+  - core/service/network/rest_client.dart (Retrofit)
+  - data/model/*.dart with @JsonSerializable (json_serializable)
+  - pubspec.yaml assets section (flutter_gen)
+  - Any file with @freezed annotation (freezed)
+
+Command:
+  dart run build_runner build --delete-conflicting-outputs
+
+  # Watch mode (auto-regenerate on changes):
+  dart run build_runner watch
+
+Generated files (DON'T EDIT MANUALLY):
+  - rest_client.g.dart       # Retrofit API implementation
+  - *.g.dart                 # JSON serialization
+  - *.freezed.dart           # Freezed classes (if used)
+  - assets.gen.dart          # Type-safe asset access
+  - l10n/*.dart              # Localization
+
+Troubleshooting:
+  - If build fails: delete build/ folder and re-run
+  - If conflicts: use --delete-conflicting-outputs flag
+  - Check imports in generated files for errors
+
+
+8. SHARED WIDGETS (src/widgets/)
+================================
+
+Available reusable widgets:
+
+  AppTextField<T>
+    - Text input with debounce validation + shake animation
+    - Supports custom validators, controllers
+    - Props: controller, validator, onChanged, debounceDuration
+
+  AppDropdown<T>
+    - Generic dropdown with validation
+    - Props: items, onChanged, value, hint, validator
+
+  CustomLoadingIndicator
+    - SpinKit three-bounce loader
+    - Customizable color, size
+
+  CustomToast
+    - Shows success/error/info/warning toasts
+    - Usage: CustomToast.show(context, message, type: ToastType.success);
+
+  CustomNetworkImage
+    - Cached network image with placeholder
+    - Props: imageUrl, placeholder, errorWidget
+
+  CustomDottedBorder
+    - Custom painted dotted border
+    - Props: color, strokeWidth, dashPattern
+
+  EmptyStateWidget
+    - Animated empty state (highly customizable)
+    - Props: title, subtitle, image, actionText, onAction
+
+  MultiSelectDropdown
+    - Multi-select checkbox dropdown
+    - Props: items, onChanged, selectedItems
+
+  MyRefreshIndicator
+    - Custom pull-to-refresh (4 styles)
+    - Props: child, onRefresh, style
+
+  BackgroundWrapper
+    - Gradient/solid background containers
+
+  CirclePercentIndicatorWidget
+    - Circular progress indicator
+
+All use theme extensions for styling (context.color.*, context.textStyle.*).
+
+
+9. SCREENUTIL
+=============
+
+Design size: 375 x 812 (iPhone X) - set in main.dart
+
+Usage:
+  16.w        # Width-based scaling (relative to 375px width)
+  16.h        # Height-based scaling (relative to 812px height)
+  16.r        # Radius scaling
+  16.sp       # Font size scaling
+  16.verticalSpace    # SizedBox with height: 16.h
+  16.horizontalSpace  # SizedBox with width: 16.w
+
+When to use:
+  - Use .w for horizontal spacing, widths
+  - Use .h for vertical spacing, heights
+  - Use .sp for font sizes only
+  - Use .r for border radius
+  - Don't scale fixed values (like icon sizes that should stay constant)
+
+Initialization (main.dart):
+  ScreenUtil.init(context);
+
+
+10. CACHE SERVICE
+=================
+
+Keys defined in: core/service/cache/cache_service.dart (CacheKey enum)
+
+To add new keys:
+  1) Add enum value to CacheKey enum
+  2) Use in your repository implementation
+
+Current keys:
+  - accessToken              # JWT access token
+  - refreshToken             # JWT refresh token
+  - isOnBoardingCompleted    # Onboarding completion flag
+  - isLoggedIn               # Login status
+  - rememberMe               # Remember me preference
+  - role                     # User role
+  - language                 # Language preference
+
+Usage (in repository implementations):
+  // Read
+  final cacheService = ref.read(cacheServiceProvider);
+  final token = cacheService.get<String>(CacheKey.accessToken);
+  final isOnboarded = cacheService.get<bool>(CacheKey.isOnBoardingCompleted);
+
+  // Write
+  await cacheService.save(CacheKey.accessToken, 'token123');
+  await cacheService.save(CacheKey.language, 'en');
+
+  // Remove
+  await cacheService.remove([CacheKey.accessToken, CacheKey.refreshToken]);
+
+  // Clear all
+  await cacheService.clear();
+
+Provider:
+  final cacheServiceProvider = Provider<CacheService>((ref) {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return SharedPreferencesService(prefs);
+  });
+
+
+11. NETWORKING
+==============
+
+Base URL: http://10.10.10.3:5000/api (defined in core/service/network/endpoints.dart)
+
+Dio setup (dio_client.dart):
+  - 30s connect/receive timeout
+  - JSON content-type headers
+  - TokenManager interceptor (auto token injection + refresh)
+  - LogInterceptor in debug mode
+
+Provider:
+  final dioProvider = Provider<Dio>((ref) {
+    final dio = Dio(BaseOptions(
+      baseUrl: Endpoints.baseUrl,
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
+      headers: {'Content-Type': 'application/json'},
+    ));
+    dio.interceptors.add(TokenManager(...));
+    return dio;
+  });
+
+Token refresh flow (TokenManager):
+  - On 401: queues concurrent requests
+  - Calls GET /auth/refresh_token/ with refresh token
+  - Saves new access token
+  - Retries all queued requests
+  - On failure: clears tokens, navigates to /login
+
+Api.call() wrapper (api_handler.dart):
+  - Handles loading/error states
+  - Checks response status (200/201 = success)
+  - Returns HttpResponse with parsed data
+  - Usage: final response = await Api.call(action: repository.method());
+
+
+12. COMMON PATTERNS
+===================
+
+Pattern: View Model State
+  - Always extends StateNotifier<AsyncValue<void>>
+  - States: loading, data(null), error
+  - Screen watches with: ref.watch(provider)
+  - Screen calls methods with: ref.read(provider.notifier).method()
+  - Use AsyncValue.guard() for try-catch
+
+Pattern: UI State Providers
+  - Use StateProvider<T> for simple UI state (obscure text, selections)
+  - Use StateProvider.autoDispose for temporary form state
+  - Use StateNotifierProvider for complex UI state
+
+Pattern: ConsumerWidget vs StatelessWidget
+  - ConsumerWidget: needs ref.read/ref.watch
+  - StatelessWidget: no Riverpod access needed
+  - ConsumerStatefulWidget: needs ref + StatefulWidget lifecycle (initState, dispose)
+
+Pattern: Import Paths
+  - From view to domain: import '../../domain/provider/xxx_provider.dart'
+  - From domain to data: import '../../data/repository/xxx_impl.dart'
+  - From data to core: import '../../../../../core/service/xxx.dart'
+  - Never import across features (feature A shouldn't import feature B directly)
+
+Pattern: File Naming
+  - Snake_case for files: my_feature_screen.dart
+  - Lowercase with underscores: my_view_model.dart
+  - Generated files: .g.dart suffix
+  - Part files: part 'xxx.dart';
+
+Pattern: Class Naming
+  - PascalCase for classes: MyFeatureScreen
+  - Prefix with feature: LoginViewModel, AuthRepository
+  - Abstract classes: prefix with 'Abstract' or suffix with 'Interface'
+  - Providers: suffix with 'Provider': myFeatureProvider
+
+Pattern: Testing
+  - Unit tests: test/unit/
+  - Widget tests: test/widget/
+  - Integration tests: integration_test/
+  - Test files mirror lib/ structure
+  - Suffix with _test.dart
+
+
+13. STATE MANAGEMENT (Riverpod)
+===============================
+
+Provider Types:
+  Provider<T>                    # Simple dependency injection
+  StateProvider<T>               # Mutable state (simple)
+  StateNotifierProvider<T, S>    # Complex state with logic
+  FutureProvider<T>              # Async values
+  StreamProvider<T>              # Stream values
+
+Usage in Widgets:
+  // Read (once, in callback)
+  final value = ref.read(myProvider);
+
+  // Watch (rebuilds on change)
+  final state = ref.watch(myProvider);
+
+  // Listen (side effects)
+  ref.listen(myProvider, (prev, next) { ... });
+
+Provider Override (for testing):
+  ProviderScope(
+    overrides: [
+      myProvider.overrideWithValue(mockValue),
+    ],
+    child: MyApp(),
+  )
+
+
+14. GOTCHAS
+===========
+
+- Retrofit returns raw HttpResponse (unwrap with .data)
+- SharedPreferences initialized in main() and overridden in ProviderScope
+- Theme extensions MUST be registered in theme_data.dart or throws in debug
+- assets.gen.dart is generated - don't edit manually
+- rest_client.g.dart is generated - don't edit manually
+- SplashScreen reads onboarding status directly (no ViewModel) for speed
+- StatefulShellRoute requires GlobalObjectKey for bottom nav branches
+- Empty directories in features are intentional (placeholder for future code)
+- Use context.go() for bottom nav, context.push() for stack navigation
+- Run build_runner after every model/endpoint change
+- CacheKey enum must be updated before using new cache keys
+- Don't put business logic in widgets - always use ViewModel
+- Don't import from data/ in presentation layer - go through domain/
+- Use .w/.h for responsive sizing, not fixed pixels
+- TokenManager handles 401 globally - don't duplicate refresh logic
+
+
+15. FILE CREATION CHECKLIST
+============================
+
+When creating a new feature, create these files in order:
+
+  [ ] 1. core/service/network/endpoints.dart
+        - Add endpoint constant
+
+  [ ] 2. core/service/network/rest_client.dart
+        - Add Retrofit method
+        - Run: dart run build_runner build --delete-conflicting-outputs
+
+  [ ] 3. feature/data/model/<model>.dart
+        - @JsonSerializable class
+        - Run: dart run build_runner build --delete-conflicting-outputs
+
+  [ ] 4. feature/domain/repository/<feature>_repository.dart
+        - Abstract interface
+
+  [ ] 5. feature/data/repository/<feature>_repository_impl.dart
+        - Concrete implementation
+
+  [ ] 6. feature/domain/provider/<feature>_repository_provider.dart
+        - Provider instance
+
+  [ ] 7. feature/presentation/view_model/<feature>_view_model.dart
+        - StateNotifier with business logic
+
+  [ ] 8. feature/presentation/view/<feature>_screen.dart
+        - ConsumerWidget/ConsumerStatefulWidget
+
+  [ ] 9. core/routes/route_const.dart
+        - Add route path constant
+
+  [ ] 10. core/routes/part_of.dart
+         - Import new screen
+
+  [ ] 11. core/routes/route_config.dart
+         - Add GoRoute
+
+  [ ] 12. Run: dart run build_runner build --delete-conflicting-outputs
+
+
+16. DEBUGGING TIPS
+==================
+
+  - Use debugPrint() instead of print() (batched output)
+  - Check Riverpod provider errors in debug console
+  - Use Flutter Inspector for widget tree
+  - Network logs appear in console (LogInterceptor)
+  - SharedPreferences: check with device preview or emulator settings
+  - Theme issues: verify extension registered in theme_data.dart
+  - Build errors: delete build/ folder, re-run build_runner
+  - Routing: use context.currentPath to debug current location
+
+
+17. PERFORMANCE CONSIDERATIONS
+==============================
+
+  - Use const constructors where possible
+  - Use ListView.builder for long lists (lazy loading)
+  - Cache images with CachedNetworkImage
+  - Use RepaintBoundary for complex custom painters
+  - Debounce API calls in ViewModels
+  - Use AutoDispose providers for temporary data
+  - Avoid unnecessary ref.watch() rebuilds
+  - Use Select() for partial state watching
+
+
+18. SECURITY BEST PRACTICES
+============================
+
+  - Never hardcode API keys or secrets
+  - Store tokens in SharedPreferences (encrypted on production)
+  - Use HTTPS in production
+  - Validate all user input
+  - Implement proper error handling (don't expose stack traces)
+  - Use Environment class for API URLs (dev/staging/prod)
+  - Clear sensitive data on logout
+
+
+19. MANDATORY RULES (MUST FOLLOW)
+=================================
+
+STATE MANAGEMENT:
+  - MUST use Riverpod for all state management
+  - NEVER use setState() - always use StateNotifier/StateProvider
+  - All widgets that need state must be ConsumerWidget or ConsumerStatefulWidget
+  - Use ref.watch() for reactive state, ref.read() for one-time access
+
+CODE CLEANLINESS:
+  - Keep code clean and readable at all times
+  - Follow Dart effective style guide
+  - Use meaningful variable/function names
+  - Avoid magic numbers - use constants
+  - Remove unused imports and code
+  - Keep methods focused on single responsibility
+
+FILE ORGANIZATION:
+  - ViewModels/Controllers: feature/feature_name/presentation/view_model/
+  - Data layer (models, repos): feature/feature_name/data/
+  - Domain layer (interfaces): feature/feature_name/domain/
+  - Presentation layer: feature/feature_name/presentation/view/
+
+FILE SIZE LIMITS:
+  - MAX 150 lines per Dart file in src/feature/
+  - If file exceeds 150 lines, split into smaller files
+  - Exception: only break this rule if splitting causes serious architectural issues
+  - After any file modifications, run: dart format .
+
+SCREEN PARTS (MULTIPLE TABS/SECTIONS):
+  - If a screen has multiple distinct parts (e.g., tabs), create separate folders
+  - Naming: use _part/ or _widgets/ suffix
+  - Example structure:
+    home_screen/
+    ├── home_screen.dart              # Main screen container
+    ├── home_tab_screen.dart          # Tab 1 content
+    ├── service_tab_screen.dart       # Tab 2 content
+    ├── home_tab_widgets/             # Tab 1 specific widgets
+    │   └── home_card.dart
+    └── service_tab_widgets/          # Tab 2 specific widgets
+        └── service_card.dart
+
+  - Or using part-style naming:
+    home_screen/
+    ├── home_screen.dart
+    ├── home_tab_screen.dart
+    ├── service_tab_screen.dart
+    ├── home_tab_part/
+    │   └── home_card.dart
+    └── service_tab_part/
+        └── service_card.dart
+
+  - Rules for parts:
+    * Each part gets its own subfolder
+    * Part widgets are ONLY used by that specific part
+    * Shared widgets go in src/widgets/ instead
+    * Main screen file should be thin (just container/navigation)
+    * Part files should not exceed 150 lines each
+
+CODE FORMATTING:
+  - ALWAYS run dart format . after writing/editing code
+  - Check line count: find lib/ -name "*.dart" -exec wc -l {} + | sort -nr
+  - If file > 150 lines, consider splitting
+
+WIDGET COMPOSITION:
+  - Extract repeated UI into separate widget files
+  - Use widgets/ folder for feature-specific reusable components
+  - Keep build() methods clean and readable
+  - Maximum 3 levels of widget nesting in build() method
+
+
+20. CODE SPLITTING STRATEGY
+============================
+
+When a file exceeds 150 lines, split by responsibility:
+
+  1) Extract widgets into separate files
+     - Move complex build() sections to dedicated widget files
+     - Keep imports clean (no circular dependencies)
+
+  2) Extract logic into view_model
+     - Business logic should never be in widgets
+     - Use ViewModel for all state operations
+
+  3) Extract constants
+     - Move magic numbers/strings to const files
+     - Use theme extensions for colors/spacing
+
+  4) Use part files (sparingly)
+     - Only for closely related code (same class)
+     - Prefer separate files over part files
+
+Splitting Example:
+  Before (200 lines):
+    login_screen.dart (contains form + validation + submit logic)
+
+  After:
+    login_screen.dart (50 lines) - Main screen container
+    login_form.dart (80 lines) - Form widget
+    login_form_validators.dart (30 lines) - Validation logic
+
+
+21. FILE SIZE VERIFICATION
+===========================
+
+After writing code, verify:
+  1) Run: dart format .
+  2) Check line counts: find lib/ -name "*.dart" -exec wc -l {} + | sort -nr
+  3) Files > 150 lines need splitting
+  4) Run analyzer: dart analyze
+
+Command to check all files:
+  dart format --output=none --set-exit-if-changed .
+  find lib/ -name "*.dart" -exec wc -l {} + | sort -nr | head -20
+
+
+22. WIDGET EXTRACTION RULES
+=============================
+
+Extract a widget when:
+  - build() method exceeds 80 lines
+  - Same UI pattern appears 3+ times
+  - Widget needs its own state management
+  - Complex animations or gestures
+  - Feature-specific sub-components
+
+Naming conventions for extracted widgets:
+  - Parent: <feature>_screen.dart
+  - Parts: <feature>_<part>_screen.dart or <part>_widget.dart
+  - Components: <descriptive_name>.dart
+
+Example - Chat Feature:
+  chat_screen/
+  ├── chat_screen.dart              # Main chat screen
+  ├── chat_list_screen.dart         # Messages list part
+  ├── chat_input_screen.dart        # Input area part
+  ├── chat_list_widgets/
+  │   ├── message_bubble.dart
+  │   └── typing_indicator.dart
+  └── chat_input_widgets/
+      ├── attachment_button.dart
+      └── voice_recorder.dart
