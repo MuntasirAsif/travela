@@ -6,7 +6,7 @@ part 'location.g.dart';
 class Location {
   final int id;
   final String name;
-  final String nameBn;
+  final String? nameBn;
   final int order;
   final double lat;
   final double lng;
@@ -21,7 +21,7 @@ class Location {
   const Location({
     required this.id,
     required this.name,
-    required this.nameBn,
+    this.nameBn,
     required this.order,
     required this.lat,
     required this.lng,

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../../../core/static/theme/theme.dart';
-import '../../view_model/search_filters.dart';
+import '../../../domain/model/search_filters.dart';
 import '../../view_model/search_filters_provider.dart';
 import 'filter_sheets.dart';
 
