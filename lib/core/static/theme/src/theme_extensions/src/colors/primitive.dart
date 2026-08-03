@@ -70,4 +70,24 @@ class _Primitive {
 
   /// accentYellow
   static const Color accentYellow = Color(0xFFC9A768);
+
+  // ----------- Custom Components -------
+
+  /// Header Start (Light)
+  static const Color headerStartLight = Color(0xFF1E293B);
+
+  /// Header End (Light)
+  static const Color headerEndLight = Color(0xFF0F172A);
+
+  /// Header Text (Light)
+  static const Color headerTextLight = Color(0xFFFFFFFF);
+
+  /// Header Start (Dark)
+  static const Color headerStartDark = Color(0xFF0F172A);
+
+  /// Header End (Dark)
+  static const Color headerEndDark = Color(0xFF020617);
+
+  /// Header Text (Dark)
+  static const Color headerTextDark = Color(0xFFF8FAFC);
 }

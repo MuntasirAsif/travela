@@ -23,6 +23,9 @@ class ColorExtension {
     required this.textFieldBorderColor,
     required this.textFieldFocusBorderColor,
     required this.accent,
+    required this.headerGradientStart,
+    required this.headerGradientEnd,
+    required this.headerText,
   });
 
   final Color border;
@@ -47,6 +50,10 @@ class ColorExtension {
   final PageViewColors pageView;
   final TextColors text;
   final AccentColors accent;
+
+  final Color headerGradientStart;
+  final Color headerGradientEnd;
+  final Color headerText;
 }
 
 class LightColorExtension extends ThemeExtension<LightColorExtension>
@@ -73,6 +80,9 @@ class LightColorExtension extends ThemeExtension<LightColorExtension>
     this.textFieldBorderColor = _Primitive.textFieldBorderColor,
     this.textFieldFocusBorderColor = _Primitive.textFieldFocusBorderColor,
     this.accent = const _LightAccentColors(),
+    this.headerGradientStart = _Primitive.headerStartLight,
+    this.headerGradientEnd = _Primitive.headerEndLight,
+    this.headerText = _Primitive.headerTextLight,
   });
 
   @override
@@ -138,6 +148,15 @@ class LightColorExtension extends ThemeExtension<LightColorExtension>
   final Color textFieldFocusBorderColor;
 
   @override
+  final Color headerGradientStart;
+
+  @override
+  final Color headerGradientEnd;
+
+  @override
+  final Color headerText;
+
+  @override
   LightColorExtension copyWith({
     Color? border,
     Color? icon,
@@ -159,6 +178,9 @@ class LightColorExtension extends ThemeExtension<LightColorExtension>
     Color? textFieldFillColor,
     Color? textFieldBorderColor,
     Color? textFieldFocusBorderColor,
+    Color? headerGradientStart,
+    Color? headerGradientEnd,
+    Color? headerText,
   }) {
     return LightColorExtension(
       border: border ?? this.border,
@@ -182,6 +204,9 @@ class LightColorExtension extends ThemeExtension<LightColorExtension>
       textFieldBorderColor: textFieldBorderColor ?? this.textFieldBorderColor,
       textFieldFocusBorderColor:
           textFieldFocusBorderColor ?? this.textFieldFocusBorderColor,
+      headerGradientStart: headerGradientStart ?? this.headerGradientStart,
+      headerGradientEnd: headerGradientEnd ?? this.headerGradientEnd,
+      headerText: headerText ?? this.headerText,
     );
   }
 
@@ -233,6 +258,17 @@ class LightColorExtension extends ThemeExtension<LightColorExtension>
         other.textFieldFocusBorderColor,
         t,
       )!,
+      headerGradientStart: Color.lerp(
+        headerGradientStart,
+        other.headerGradientStart,
+        t,
+      )!,
+      headerGradientEnd: Color.lerp(
+        headerGradientEnd,
+        other.headerGradientEnd,
+        t,
+      )!,
+      headerText: Color.lerp(headerText, other.headerText, t)!,
     );
   }
 }
@@ -261,6 +297,9 @@ class DarkColorExtension extends ThemeExtension<DarkColorExtension>
     this.textFieldBorderColor = _Primitive.textFieldBorderColor,
     this.textFieldFocusBorderColor = _Primitive.textFieldFocusBorderColor,
     this.accent = const _DarkAccentColors(),
+    this.headerGradientStart = _Primitive.headerStartDark,
+    this.headerGradientEnd = _Primitive.headerEndDark,
+    this.headerText = _Primitive.headerTextDark,
   });
 
   @override
@@ -327,6 +366,15 @@ class DarkColorExtension extends ThemeExtension<DarkColorExtension>
   final Color textFieldFocusBorderColor;
 
   @override
+  final Color headerGradientStart;
+
+  @override
+  final Color headerGradientEnd;
+
+  @override
+  final Color headerText;
+
+  @override
   DarkColorExtension copyWith({
     Color? border,
     Color? icon,
@@ -348,6 +396,9 @@ class DarkColorExtension extends ThemeExtension<DarkColorExtension>
     Color? textFieldFillColor,
     Color? textFieldBorderColor,
     Color? textFieldFocusBorderColor,
+    Color? headerGradientStart,
+    Color? headerGradientEnd,
+    Color? headerText,
   }) {
     return DarkColorExtension(
       border: border ?? this.border,
@@ -371,6 +422,9 @@ class DarkColorExtension extends ThemeExtension<DarkColorExtension>
       textFieldBorderColor: textFieldBorderColor ?? this.textFieldBorderColor,
       textFieldFocusBorderColor:
           textFieldFocusBorderColor ?? this.textFieldFocusBorderColor,
+      headerGradientStart: headerGradientStart ?? this.headerGradientStart,
+      headerGradientEnd: headerGradientEnd ?? this.headerGradientEnd,
+      headerText: headerText ?? this.headerText,
     );
   }
 
@@ -421,6 +475,17 @@ class DarkColorExtension extends ThemeExtension<DarkColorExtension>
         other.textFieldFocusBorderColor,
         t,
       )!,
+      headerGradientStart: Color.lerp(
+        headerGradientStart,
+        other.headerGradientStart,
+        t,
+      )!,
+      headerGradientEnd: Color.lerp(
+        headerGradientEnd,
+        other.headerGradientEnd,
+        t,
+      )!,
+      headerText: Color.lerp(headerText, other.headerText, t)!,
     );
   }
 }

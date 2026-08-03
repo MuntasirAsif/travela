@@ -41,31 +41,54 @@ class _PropertySearchScreenState extends ConsumerState<PropertySearchScreen> {
 
     return Scaffold(
       backgroundColor: context.color.scaffoldBackground,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                context.padding.p16,
-                context.spacing.s16,
-                context.padding.p16,
-                context.spacing.s12,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SearchHeader(),
-                  SizedBox(height: context.spacing.s16),
-                  const LocationSearchField(),
-                  SizedBox(height: context.spacing.s12),
-                  FilterRow(onSearch: _startSearch),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  context.color.headerGradientStart,
+                  context.color.headerGradientEnd,
                 ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.vertical(
+                bottom: Radius.circular(context.radius.r32),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: context.color.primary.withValues(alpha: 0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  context.padding.p20,
+                  context.spacing.s16,
+                  context.padding.p20,
+                  context.spacing.s24,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SearchHeader(),
+                    SizedBox(height: context.spacing.s16),
+                    const LocationSearchField(),
+                    SizedBox(height: context.spacing.s16),
+                    FilterRow(onSearch: _startSearch),
+                  ],
+                ),
               ),
             ),
-            Expanded(child: _buildBody(state)),
-          ],
-        ),
+          ),
+          Expanded(child: _buildBody(state)),
+        ],
       ),
     );
   }
