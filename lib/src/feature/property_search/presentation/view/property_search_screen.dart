@@ -181,7 +181,11 @@ class _PropertySearchScreenState extends ConsumerState<PropertySearchScreen>
       case PropertySearchStatus.streaming:
       case PropertySearchStatus.done:
         if (state.items.isEmpty) return const EmptyPlaceholder();
-        return ResultsPane(state: state);
+        return ResultsPane(
+          state: state,
+          onLoadMore: () =>
+              ref.read(propertySearchViewModelProvider.notifier).loadMore(),
+        );
     }
   }
 }

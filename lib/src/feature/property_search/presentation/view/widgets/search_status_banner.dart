@@ -9,10 +9,12 @@ class SearchStatusBanner extends StatelessWidget {
     super.key,
     required this.status,
     required this.totalCount,
+    this.hasMore = false,
   });
 
   final PropertySearchStatus status;
   final int totalCount;
+  final bool hasMore;
 
   @override
   Widget build(BuildContext context) {
