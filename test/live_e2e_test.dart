@@ -37,38 +37,42 @@ class _LiveRepository implements PropertySearchRepository {
 }
 
 void main() {
-  testWidgets('live api end-to-end renders cards', (tester) async {
-    HttpOverrides.global = null;
+  testWidgets(
+    'live api end-to-end renders cards',
+    (tester) async {
+      HttpOverrides.global = null;
 
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-          propertySearchRepositoryProvider.overrideWithValue(
-            _LiveRepository(),
-          ),
-        ],
-        child: const MyApp(),
-      ),
-    );
-    await tester.pump();
-    expect(find.byType(SplashScreen), findsOneWidget);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            propertySearchRepositoryProvider.overrideWithValue(
+              _LiveRepository(),
+            ),
+          ],
+          child: const MyApp(),
+        ),
+      );
+      await tester.pump();
+      expect(find.byType(SplashScreen), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 900));
-    await tester.pump();
-    await tester.pump();
+      await tester.pump(const Duration(milliseconds: 900));
+      await tester.pump();
+      await tester.pump();
 
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(seconds: 10)),
-    );
-    await tester.pump();
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(seconds: 10)),
+      );
+      await tester.pump();
 
-    final cards = find.byType(SearchResultCard).evaluate().length;
-    debugPrint('LIVE E2E: cards rendered = $cards');
-    expect(cards, greaterThan(0));
-    expect(tester.takeException(), isNull);
-  }, timeout: const Timeout(Duration(minutes: 2)));
+      final cards = find.byType(SearchResultCard).evaluate().length;
+      debugPrint('LIVE E2E: cards rendered = $cards');
+      expect(cards, greaterThan(0));
+      expect(tester.takeException(), isNull);
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
 }
