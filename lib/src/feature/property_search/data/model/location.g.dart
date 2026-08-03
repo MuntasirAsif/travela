@@ -9,7 +9,7 @@ part of 'location.dart';
 Location _$LocationFromJson(Map<String, dynamic> json) => Location(
   id: (json['id'] as num).toInt(),
   name: json['name'] as String,
-  nameBn: json['name_bn'] as String,
+  nameBn: json['name_bn'] as String?,
   order: (json['order'] as num).toInt(),
   lat: (json['lat'] as num).toDouble(),
   lng: (json['lng'] as num).toDouble(),

@@ -2,6 +2,10 @@ class Endpoints {
   static const base = 'http://10.10.10.3:5000/api';
   static const searchBase = 'https://search.travela.xyz/api';
 
+  /// Search (public, no auth)
+  static const String popularLocations = '/popular-locations';
+  static const String searchStream = '/search/stream';
+
   /// Authentication
   static const String register = '/auth/register/';
   static const String login = '/auth/login';

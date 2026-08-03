@@ -31,6 +31,32 @@ class SearchFilters {
     return '$year-$month-$day';
   }
 
+  Map<String, dynamic> toQueryParameters() {
+    final params = <String, dynamic>{
+      'guest': guest,
+      'rooms': rooms,
+      'page': 1,
+      'per_page': 20,
+    };
+    final fromValue = fromLabel;
+    final toValue = toLabel;
+    if (fromValue != null) params['from'] = fromValue;
+    if (toValue != null) params['to'] = toValue;
+    if (minPrice > 0 || maxPrice < 5000) {
+      params['price'] = '${minPrice.round()}-${maxPrice.round()}';
+    }
+    final locationValue = location;
+    if (locationValue != null) {
+      params['location_id'] = locationValue.id;
+      params['location'] = '${locationValue.lat},${locationValue.lng}';
+      params['address_name'] = locationValue.name;
+      params['within'] = locationValue.within;
+      params['tier_1'] = locationValue.tier1;
+      params['tier_2'] = locationValue.tier2;
+    }
+    return params;
+  }
+
   SearchFilters copyWith({
     Location? location,
     DateTime? from,

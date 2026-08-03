@@ -32,9 +32,7 @@ class _PropertySearchScreenState extends ConsumerState<PropertySearchScreen> {
     final filters = ref.read(searchFiltersProvider);
     ref
         .read(propertySearchViewModelProvider.notifier)
-        .startMockSearch(
-          filters.copyWith(location: location ?? filters.location),
-        );
+        .startSearch(filters.copyWith(location: location ?? filters.location));
   }
 
   @override

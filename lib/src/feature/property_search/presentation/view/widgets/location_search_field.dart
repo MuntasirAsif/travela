@@ -133,12 +133,14 @@ class _SuggestionDropdown extends StatelessWidget {
                 color: context.color.primary,
               ),
               title: Text(location.name, style: context.textStyle.bodyMedium),
-              subtitle: Text(
-                location.nameBn,
-                style: context.textStyle.bodySmall.copyWith(
-                  color: context.color.text.secondary,
-                ),
-              ),
+              subtitle: location.nameBn == null
+                  ? null
+                  : Text(
+                      location.nameBn!,
+                      style: context.textStyle.bodySmall.copyWith(
+                        color: context.color.text.secondary,
+                      ),
+                    ),
               onTap: () => onSelected(location),
             );
           },
