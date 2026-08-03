@@ -3,4 +3,5 @@ class RouteConst {
   static const String onBoarding = '/onBoarding';
   static const String login = '/login';
   static const String homeScreen = '/home_screen';
+  static const String search = '/search';
 }
