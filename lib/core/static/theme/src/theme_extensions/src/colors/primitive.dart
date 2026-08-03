@@ -74,20 +74,20 @@ class _Primitive {
   // ----------- Custom Components -------
 
   /// Header Start (Light)
-  static const Color headerStartLight = Color(0xFF1E293B);
+  static const Color headerStartLight = brandLight;
 
   /// Header End (Light)
-  static const Color headerEndLight = Color(0xFF0F172A);
+  static const Color headerEndLight = brand;
 
   /// Header Text (Light)
   static const Color headerTextLight = Color(0xFFFFFFFF);
 
   /// Header Start (Dark)
-  static const Color headerStartDark = Color(0xFF0F172A);
+  static const Color headerStartDark = brand;
 
   /// Header End (Dark)
-  static const Color headerEndDark = Color(0xFF020617);
+  static const Color headerEndDark = Color(0xFF8E1045);
 
   /// Header Text (Dark)
-  static const Color headerTextDark = Color(0xFFF8FAFC);
+  static const Color headerTextDark = Color(0xFFFFFFFF);
 }

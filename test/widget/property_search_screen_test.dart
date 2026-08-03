@@ -156,7 +156,7 @@ void main() {
     expect(find.text('Sea View Studio'), findsOneWidget);
 
     await tester.pump(const Duration(milliseconds: 600));
-    expect(find.text('All 6 stays loaded'), findsOneWidget);
+    expect(find.text('6 stays'), findsOneWidget);
     expect(find.text('Sea View Studio'), findsWidgets);
 
     expect(tester.takeException(), isNull);

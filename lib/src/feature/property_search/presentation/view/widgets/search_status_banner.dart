@@ -41,24 +41,6 @@ class SearchStatusBanner extends StatelessWidget {
       );
     }
 
-    if (status == PropertySearchStatus.done) {
-      return _Banner(
-        color: context.color.success.withValues(alpha: 0.08),
-        child: Row(
-          children: [
-            Icon(Icons.check_circle, size: 16.sp, color: context.color.success),
-            SizedBox(width: context.spacing.s8),
-            Text(
-              'All $totalCount stays loaded',
-              style: context.textStyle.labelMedium.copyWith(
-                color: context.color.success,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
     return const SizedBox.shrink();
   }
 }

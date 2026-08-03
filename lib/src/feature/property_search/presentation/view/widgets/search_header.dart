@@ -6,7 +6,9 @@ import '../../view_model/property_search_provider.dart';
 import '../../view_model/property_search_state.dart';
 
 class SearchHeader extends ConsumerWidget {
-  const SearchHeader({super.key});
+  const SearchHeader({super.key, required this.collapse});
+
+  final Animation<double> collapse;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,12 +34,24 @@ class SearchHeader extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Search stays', style: context.textStyle.headlineSmall),
-        SizedBox(height: context.spacing.s4),
         Text(
-          subtitle,
-          style: context.textStyle.bodyMedium.copyWith(
-            color: context.color.text.secondary,
+          'Where to next?',
+          style: context.textStyle.headlineMedium.copyWith(
+            color: context.color.headerText,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        SizeTransition(
+          sizeFactor: ReverseAnimation(collapse),
+          alignment: Alignment.topLeft,
+          child: FadeTransition(
+            opacity: ReverseAnimation(collapse),
+            child: Text(
+              subtitle,
+              style: context.textStyle.bodyMedium.copyWith(
+                color: context.color.headerText.withValues(alpha: 0.8),
+              ),
+            ),
           ),
         ),
       ],

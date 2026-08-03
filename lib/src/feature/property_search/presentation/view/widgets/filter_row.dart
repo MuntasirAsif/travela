@@ -8,9 +8,7 @@ import '../../view_model/search_filters_provider.dart';
 import 'filter_sheets.dart';
 
 class FilterRow extends ConsumerWidget {
-  const FilterRow({super.key, required this.onSearch});
-
-  final VoidCallback onSearch;
+  const FilterRow({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,22 +40,6 @@ class FilterRow extends ConsumerWidget {
                 ),
               ],
             ),
-          ),
-        ),
-        SizedBox(width: context.spacing.s8),
-        FilledButton.icon(
-          onPressed: onSearch,
-          style: FilledButton.styleFrom(
-            minimumSize: const Size(0, 48),
-            backgroundColor: context.color.headerText,
-            foregroundColor: context.color.headerGradientStart,
-            elevation: 0,
-            padding: EdgeInsets.symmetric(horizontal: context.spacing.s24),
-          ),
-          icon: const Icon(Icons.search),
-          label: const Text(
-            'Search',
-            style: TextStyle(fontWeight: FontWeight.w700),
           ),
         ),
       ],
@@ -146,6 +128,12 @@ class _FilterChip extends StatelessWidget {
                   color: context.color.headerText,
                   fontWeight: FontWeight.w600,
                 ),
+              ),
+              SizedBox(width: context.spacing.s4),
+              Icon(
+                Icons.keyboard_arrow_down,
+                size: 16.sp,
+                color: context.color.headerText.withValues(alpha: 0.7),
               ),
             ],
           ),
