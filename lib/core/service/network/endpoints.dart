@@ -1,5 +1,6 @@
 class Endpoints {
   static const base = 'http://10.10.10.3:5000/api';
+  static const searchBase = 'https://search.travela.xyz/api';
 
   /// Authentication
   static const String register = '/auth/register/';

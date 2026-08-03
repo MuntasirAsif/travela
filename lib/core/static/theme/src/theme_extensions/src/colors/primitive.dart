@@ -3,10 +3,10 @@ part of 'colors.dart';
 /// Primitive color palette
 class _Primitive {
   /// brand, primary, active, info
-  static const Color brand = Color(0xFF1B2A4A);
+  static const Color brand = Color(0xFFE1217E);
 
   /// brandLight, secondary
-  static const Color brandLight = Color(0xFF5B7FDE);
+  static const Color brandLight = Color(0xFFF06292);
 
   /// scaffoldColor, scaffoldBackground
   static const Color scaffoldColor = Color(0xFFF2F5F9);
