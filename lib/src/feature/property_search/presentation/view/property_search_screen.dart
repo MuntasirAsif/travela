@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/static/theme/theme.dart';
+import '../../../../widgets/refresh_indicator/my_refresh_indicator.dart';
 import '../view_model/location_search_provider.dart';
 import '../view_model/property_search_provider.dart';
 import '../view_model/property_search_state.dart';
@@ -223,11 +224,14 @@ class _PropertySearchScreenState extends ConsumerState<PropertySearchScreen>
       case PropertySearchStatus.streaming:
       case PropertySearchStatus.done:
         if (state.items.isEmpty) return const EmptyPlaceholder();
-        return ResultsPane(
-          state: state,
-          controller: _resultsController,
-          onLoadMore: () =>
-              ref.read(propertySearchViewModelProvider.notifier).loadMore(),
+        return MyRefreshIndicator(
+          onRefresh: () async => _startSearch(),
+          child: ResultsPane(
+            state: state,
+            controller: _resultsController,
+            onLoadMore: () =>
+                ref.read(propertySearchViewModelProvider.notifier).loadMore(),
+          ),
         );
     }
   }
