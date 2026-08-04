@@ -19,12 +19,6 @@ dart run build_runner build
 flutter run
 ```
 
-The project uses the live API:
-
-`https://search.travela.xyz`
-
-No API key or `.env` file is required.
-
 ---
 
 ## Project Structure
