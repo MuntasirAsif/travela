@@ -9,10 +9,12 @@ class SearchStatusBanner extends StatelessWidget {
     super.key,
     required this.status,
     required this.totalCount,
+    this.hasMore = false,
   });
 
   final PropertySearchStatus status;
   final int totalCount;
+  final bool hasMore;
 
   @override
   Widget build(BuildContext context) {
@@ -34,24 +36,6 @@ class SearchStatusBanner extends StatelessWidget {
               'Receiving results…',
               style: context.textStyle.labelMedium.copyWith(
                 color: context.color.primary,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (status == PropertySearchStatus.done) {
-      return _Banner(
-        color: context.color.success.withValues(alpha: 0.08),
-        child: Row(
-          children: [
-            Icon(Icons.check_circle, size: 16.sp, color: context.color.success),
-            SizedBox(width: context.spacing.s8),
-            Text(
-              'All $totalCount stays loaded',
-              style: context.textStyle.labelMedium.copyWith(
-                color: context.color.success,
               ),
             ),
           ],
