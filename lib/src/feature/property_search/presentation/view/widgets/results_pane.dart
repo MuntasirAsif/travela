@@ -5,10 +5,16 @@ import 'results_list.dart';
 import 'search_status_banner.dart';
 
 class ResultsPane extends StatelessWidget {
-  const ResultsPane({super.key, required this.state, required this.onLoadMore});
+  const ResultsPane({
+    super.key,
+    required this.state,
+    required this.onLoadMore,
+    required this.controller,
+  });
 
   final PropertySearchState state;
   final VoidCallback onLoadMore;
+  final ScrollController controller;
 
   @override
   Widget build(BuildContext context) {
@@ -16,6 +22,7 @@ class ResultsPane extends StatelessWidget {
       children: [
         Expanded(
           child: SearchResultsList(
+            controller: controller,
             items: state.items,
             hasMore: state.hasMore,
             isLoadingMore: state.isLoadingMore,

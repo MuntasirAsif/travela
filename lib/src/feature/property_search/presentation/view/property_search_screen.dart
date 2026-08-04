@@ -25,6 +25,10 @@ class PropertySearchScreen extends ConsumerStatefulWidget {
 class _PropertySearchScreenState extends ConsumerState<PropertySearchScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _headerController;
+  final ScrollController _resultsController = ScrollController(
+    keepScrollOffset: false,
+  );
+  bool _showBackToTop = false;
 
   @override
   void initState() {
@@ -33,13 +37,32 @@ class _PropertySearchScreenState extends ConsumerState<PropertySearchScreen>
       vsync: this,
       duration: const Duration(milliseconds: 280),
     );
+    _resultsController.addListener(_onResultsScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) => _startSearch());
   }
 
   @override
   void dispose() {
+    _resultsController.dispose();
     _headerController.dispose();
     super.dispose();
+  }
+
+  void _onResultsScroll() {
+    final show =
+        _resultsController.hasClients && _resultsController.offset > 300;
+    if (show != _showBackToTop) {
+      setState(() => _showBackToTop = show);
+    }
+  }
+
+  void _scrollToTop() {
+    if (!_resultsController.hasClients) return;
+    _resultsController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   bool _handleScroll(ScrollNotification notification) {
@@ -53,6 +76,7 @@ class _PropertySearchScreenState extends ConsumerState<PropertySearchScreen>
   }
 
   void _startSearch() {
+    if (_showBackToTop) setState(() => _showBackToTop = false);
     final location = ref.read(locationSearchViewModelProvider).selected;
     final filters = ref.read(searchFiltersProvider);
     ref
@@ -66,6 +90,21 @@ class _PropertySearchScreenState extends ConsumerState<PropertySearchScreen>
 
     return Scaffold(
       backgroundColor: context.color.scaffoldBackground,
+      floatingActionButton: AnimatedOpacity(
+        opacity: _showBackToTop ? 1 : 0,
+        duration: const Duration(milliseconds: 200),
+        child: IgnorePointer(
+          ignoring: !_showBackToTop,
+          child: FloatingActionButton.small(
+            heroTag: null,
+            onPressed: _scrollToTop,
+            backgroundColor: context.color.primary,
+            foregroundColor: context.color.headerText,
+            elevation: 3,
+            child: const Icon(Icons.keyboard_arrow_up),
+          ),
+        ),
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -106,7 +145,10 @@ class _PropertySearchScreenState extends ConsumerState<PropertySearchScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SearchHeader(collapse: _headerController),
+                        SearchHeader(
+                          collapse: _headerController,
+                          onExpand: () => _headerController.reverse(),
+                        ),
                         SizeTransition(
                           sizeFactor: ReverseAnimation(_headerController),
                           alignment: Alignment.topLeft,
@@ -183,6 +225,7 @@ class _PropertySearchScreenState extends ConsumerState<PropertySearchScreen>
         if (state.items.isEmpty) return const EmptyPlaceholder();
         return ResultsPane(
           state: state,
+          controller: _resultsController,
           onLoadMore: () =>
               ref.read(propertySearchViewModelProvider.notifier).loadMore(),
         );

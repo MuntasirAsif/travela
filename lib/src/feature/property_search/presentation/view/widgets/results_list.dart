@@ -9,12 +9,14 @@ class SearchResultsList extends StatefulWidget {
   const SearchResultsList({
     super.key,
     required this.items,
+    this.controller,
     this.hasMore = false,
     this.isLoadingMore = false,
     this.onLoadMore,
   });
 
   final List<SearchItem> items;
+  final ScrollController? controller;
   final bool hasMore;
   final bool isLoadingMore;
   final VoidCallback? onLoadMore;
@@ -24,17 +26,21 @@ class SearchResultsList extends StatefulWidget {
 }
 
 class _SearchResultsListState extends State<SearchResultsList> {
-  final ScrollController _controller = ScrollController();
+  late final ScrollController _controller;
 
   @override
   void initState() {
     super.initState();
+    _controller = widget.controller ?? ScrollController();
     _controller.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller.removeListener(_onScroll);
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
     super.dispose();
   }
 

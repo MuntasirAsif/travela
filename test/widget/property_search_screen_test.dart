@@ -215,6 +215,27 @@ void main() {
     expect(state.items.length, 30);
     expect(state.hasMore, isFalse);
     expect(state.status, PropertySearchStatus.done);
+
+    final fabOpacity = tester.widget<AnimatedOpacity>(
+      find.ancestor(
+        of: find.byType(FloatingActionButton),
+        matching: find.byType(AnimatedOpacity),
+      ),
+    );
+    expect(fabOpacity.opacity, 1);
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 250));
+    final fabOpacityAfter = tester.widget<AnimatedOpacity>(
+      find.ancestor(
+        of: find.byType(FloatingActionButton),
+        matching: find.byType(AnimatedOpacity),
+      ),
+    );
+    expect(fabOpacityAfter.opacity, 0);
+
     expect(tester.takeException(), isNull);
   });
 }
