@@ -50,40 +50,46 @@ class _LocationSearchFieldState extends ConsumerState<LocationSearchField> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextField(
-            controller: _controller,
-            onChanged: notifier.onQueryChanged,
-            onTapOutside: (_) => notifier.clearSuggestions(),
-            textInputAction: TextInputAction.search,
-            style: context.textStyle.bodyMedium,
-            decoration: InputDecoration(
-              hintText: 'Search location',
-              prefixIcon: Icon(
-                Icons.location_on_outlined,
-                color: context.color.primary,
-              ),
-              suffixIcon: searchState.isLoading
-                  ? Padding(
-                      padding: EdgeInsets.all(12.r),
-                      child: SizedBox(
-                        width: 20.r,
-                        height: 20.r,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: context.color.primary,
+          Container(
+            decoration: BoxDecoration(
+              color: context.color.scaffoldBackground,
+              borderRadius: BorderRadius.circular(context.radius.r16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _controller,
+              onChanged: notifier.onQueryChanged,
+              onTapOutside: (_) => notifier.clearSuggestions(),
+              textInputAction: TextInputAction.search,
+              style: context.textStyle.bodyMedium,
+              decoration: InputDecoration(
+                hintText: 'Where are you going?',
+                prefixIcon: Icon(Icons.search, color: context.color.primary),
+                suffixIcon: searchState.isLoading
+                    ? Padding(
+                        padding: EdgeInsets.all(12.r),
+                        child: SizedBox(
+                          width: 20.r,
+                          height: 20.r,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: context.color.primary,
+                          ),
                         ),
-                      ),
-                    )
-                  : null,
-              filled: true,
-              fillColor: context.color.textFieldFillColor,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16.w,
-                vertical: 12.h,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(context.radius.r16),
-                borderSide: BorderSide.none,
+                      )
+                    : null,
+                filled: false,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16.w,
+                  vertical: 14.h,
+                ),
+                border: InputBorder.none,
               ),
             ),
           ),

@@ -8,9 +8,7 @@ import '../../view_model/search_filters_provider.dart';
 import 'filter_sheets.dart';
 
 class FilterRow extends ConsumerWidget {
-  const FilterRow({super.key, required this.onSearch});
-
-  final VoidCallback onSearch;
+  const FilterRow({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,13 +41,6 @@ class FilterRow extends ConsumerWidget {
               ],
             ),
           ),
-        ),
-        SizedBox(width: context.spacing.s8),
-        FilledButton.icon(
-          onPressed: onSearch,
-          style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
-          icon: const Icon(Icons.search),
-          label: const Text('Search'),
         ),
       ],
     );
@@ -111,27 +102,39 @@ class _FilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: context.color.textFieldFillColor,
-      borderRadius: BorderRadius.circular(context.radius.r12),
+      color: context.color.headerText.withValues(alpha: 0.15),
+      borderRadius: BorderRadius.circular(context.radius.r24),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(context.radius.r12),
+        borderRadius: BorderRadius.circular(context.radius.r24),
         child: Container(
           padding: EdgeInsets.symmetric(
-            horizontal: context.spacing.s12,
+            horizontal: context.spacing.s16,
             vertical: context.spacing.s8,
           ),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(context.radius.r12),
+            borderRadius: BorderRadius.circular(context.radius.r24),
             border: Border.all(
-              color: context.color.border.withValues(alpha: 0.5),
+              color: context.color.headerText.withValues(alpha: 0.3),
             ),
           ),
           child: Row(
             children: [
-              Icon(icon, size: 16.sp, color: context.color.primary),
+              Icon(icon, size: 18.sp, color: context.color.headerText),
               SizedBox(width: context.spacing.s6),
-              Text(label, style: context.textStyle.labelMedium),
+              Text(
+                label,
+                style: context.textStyle.labelMedium.copyWith(
+                  color: context.color.headerText,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(width: context.spacing.s4),
+              Icon(
+                Icons.keyboard_arrow_down,
+                size: 16.sp,
+                color: context.color.headerText.withValues(alpha: 0.7),
+              ),
             ],
           ),
         ),

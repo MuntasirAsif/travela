@@ -7,12 +7,16 @@ class PropertySearchState {
   final List<SearchItem> items;
   final int totalCount;
   final String? errorMessage;
+  final bool hasMore;
+  final bool isLoadingMore;
 
   const PropertySearchState({
     this.status = PropertySearchStatus.idle,
     this.items = const [],
     this.totalCount = 0,
     this.errorMessage,
+    this.hasMore = false,
+    this.isLoadingMore = false,
   });
 
   bool get isStreaming => status == PropertySearchStatus.streaming;
@@ -23,12 +27,16 @@ class PropertySearchState {
     List<SearchItem>? items,
     int? totalCount,
     String? errorMessage,
+    bool? hasMore,
+    bool? isLoadingMore,
   }) {
     return PropertySearchState(
       status: status ?? this.status,
       items: items ?? this.items,
       totalCount: totalCount ?? this.totalCount,
       errorMessage: errorMessage ?? this.errorMessage,
+      hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
     );
   }
 }

@@ -8,6 +8,8 @@ class SearchFilters {
   final int rooms;
   final double minPrice;
   final double maxPrice;
+  final int page;
+  final int perPage;
 
   const SearchFilters({
     this.location,
@@ -17,6 +19,8 @@ class SearchFilters {
     this.rooms = 1,
     this.minPrice = 0,
     this.maxPrice = 5000,
+    this.page = 1,
+    this.perPage = 20,
   });
 
   String? get fromLabel => formatDate(from);
@@ -35,8 +39,8 @@ class SearchFilters {
     final params = <String, dynamic>{
       'guest': guest,
       'rooms': rooms,
-      'page': 1,
-      'per_page': 20,
+      'page': page,
+      'per_page': perPage,
     };
     final fromValue = fromLabel;
     final toValue = toLabel;
@@ -65,6 +69,8 @@ class SearchFilters {
     int? rooms,
     double? minPrice,
     double? maxPrice,
+    int? page,
+    int? perPage,
   }) {
     return SearchFilters(
       location: location ?? this.location,
@@ -74,6 +80,8 @@ class SearchFilters {
       rooms: rooms ?? this.rooms,
       minPrice: minPrice ?? this.minPrice,
       maxPrice: maxPrice ?? this.maxPrice,
+      page: page ?? this.page,
+      perPage: perPage ?? this.perPage,
     );
   }
 }
